@@ -8,15 +8,23 @@ export class ProductService {
   constructor(private prisma: PrismaService) {}
 
   create(data: CreateProductDto) {
-    return this.prisma.product.create({ data });
+      return this.prisma.product.create({
+        data,
+        include: { category: true },
+      });
   }
 
   findAll() {
-    return this.prisma.product.findMany();
+    return this.prisma.product.findMany({
+      include: { category: true },
+    });
   }
 
   findOne(id: number) {
-    return this.prisma.product.findUnique({ where: { id } });
+    return this.prisma.product.findUnique({
+      where: { id },
+      include: { category: true },
+    });
   }
 
   update(id: number, data: UpdateProductDto) {
