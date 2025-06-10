@@ -16,7 +16,7 @@ export function FakeAuthMiddleware(req: Request, res: Response, next: NextFuncti
   req.user = {
     id: 1,
     username: 'admin_user',
-    role: 'user', // Change to 'user' to test RBAC
+    role: 'admin', // Change to 'user' to test RBAC
   };
   next();
 }
