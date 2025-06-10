@@ -12,6 +12,8 @@ export class AuthService {
 
     async register(email: string, password: string, role: string = 'user') {
         const allowedRoles = ['user', 'admin']; // whitelist roles
+        const userRole = role ?? 'user'; // fallback to user if undefined
+
         if (!allowedRoles.includes(role)) {
             throw new BadRequestException('Invalid role');
         }
@@ -21,7 +23,7 @@ export class AuthService {
             data: {
                 email,
                 password: hashedPassword,
-                role, // default role
+                role: userRole, // default role
             },
         });
         return { message: 'User created', userId: user.id};
