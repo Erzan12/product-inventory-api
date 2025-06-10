@@ -28,7 +28,11 @@ export class ProductService {
   }
 
   update(id: number, data: UpdateProductDto) {
-    return this.prisma.product.update({ where: { id }, data });
+    return this.prisma.product.update({
+       where: { id },
+       data,
+       include: { category: true },
+   });
   }
 
   remove(id: number) {
