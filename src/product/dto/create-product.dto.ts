@@ -15,4 +15,7 @@ export class CreateProductDto {
   @IsNumber()
   @Min(0)
   quantity: number;
+
+  @IsNumber()
+  categoryId: number; // required for connect
 }
