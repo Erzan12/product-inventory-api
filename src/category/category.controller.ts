@@ -10,7 +10,7 @@ import { RolesGuard } from 'src/auth/roles.guard';
 
 // @UseGuards(RolesGuard)
 @UseGuards(AuthGuard('jwt'), RolesGuard)
-@Controller('category')
+@Controller('api/categories')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
@@ -26,19 +26,19 @@ export class CategoryController {
     return this.categoryService.findAll();
   }
 
-  @Get(':id')
+  @Get()
   findOne(@Param('id') id: string) {
     return this.categoryService.findOne(+id);
   }
 
-  @Patch(':id')
+  @Patch()
   @Roles('admin')
   // @Roles(Role.Admin)
   update(@Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
     return this.categoryService.update(+id, updateCategoryDto);
   }
 
-  @Delete(':id')
+  @Delete()
   @Roles('admin')
   // @Roles(Role.Admin)
   remove(@Param('id') id: string) {
