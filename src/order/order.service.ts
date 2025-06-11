@@ -8,6 +8,30 @@ import { UpdateOrderStatusDto, OrderStatus } from './dto/update-order-status.dto
 export class OrderService {
   constructor(private prisma: PrismaService) {}
 
+  async getAllOrders() {
+    return this.prisma.order.findMany({
+      include: {
+        user: true,
+        items: {
+          include: { product: true },
+        },
+      },
+      orderBy: { createdAt: 'desc'},
+    });
+  }
+
+  async getUserOrders(userId: number) {
+    return this.prisma.order.findMany({
+      where: { userId },
+      include: {
+        items: {
+          include: { product: true },
+        },
+      },
+      orderBy: { createdAt: 'desc'},
+    });
+  }
+
   async createOrder(userId: number, dto: CreateOrderDto) {
 
     //validate if product exist before order

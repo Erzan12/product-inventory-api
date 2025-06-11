@@ -1,5 +1,5 @@
 // src/order/order.controller.ts
-import { Controller, Post, Body, Request, Patch, Param } from '@nestjs/common';
+import { Controller, Post, Body, Request, Patch, Param, Get } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Roles } from '../auth/roles.decorator';
@@ -13,6 +13,17 @@ import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 @Controller('api/orders')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
+
+  @Get()
+  @Roles('admin')
+  getAllOrders() {
+    return this.orderService.getAllOrders();
+  }
+
+  @Get('my')
+  getMyOrders(@Request() req) {
+    return this. orderService.getUserOrders(req.user.userId);
+  }
   
   @Post()
   create(@Body() dto: CreateOrderDto, @Request() req) {
@@ -26,3 +37,6 @@ export class OrderController {
     return this.orderService.UpdateOrderStatus(Number(id), dto);
   }
 }
+
+
+
