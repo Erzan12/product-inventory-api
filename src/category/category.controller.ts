@@ -26,19 +26,19 @@ export class CategoryController {
     return this.categoryService.findAll();
   }
 
-  @Get()
+  @Get(':id')
   findOne(@Param('id') id: string) {
     return this.categoryService.findOne(+id);
   }
 
-  @Patch()
+  @Patch(':id')
   @Roles('admin')
   // @Roles(Role.Admin)
   update(@Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
     return this.categoryService.update(+id, updateCategoryDto);
   }
 
-  @Delete()
+  @Delete(':id')
   @Roles('admin')
   // @Roles(Role.Admin)
   remove(@Param('id') id: string) {
