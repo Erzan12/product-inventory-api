@@ -7,7 +7,7 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 export class CategoryService {
   constructor(private prisma: PrismaService) {}
 
-  create(data: CreateCategoryDto) {
+  createCategory(data: CreateCategoryDto) {
     return this.prisma.category.create({ data });
   }
 

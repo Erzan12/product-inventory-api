@@ -18,7 +18,7 @@ export class CategoryController {
   @Roles('admin')
   // @Roles(Role.Admin)
   create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoryService.create(createCategoryDto);
+    return this.categoryService.createCategory(createCategoryDto);
   }
 
   @Get()
