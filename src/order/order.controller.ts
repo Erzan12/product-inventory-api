@@ -8,11 +8,16 @@ import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { CartService } from 'src/cart/cart.service';
+import { CartItem } from 'src/cart/cart.service';
 
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('api/orders')
 export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(
+    private readonly orderService: OrderService,
+    private readonly cartService: CartService
+  ) {}
 
   @Get()
   @Roles('admin')
@@ -35,6 +40,28 @@ export class OrderController {
   @Roles('admin')
   updateStatus(@Param('id') id: string, @Body() dto: UpdateOrderStatusDto) {
     return this.orderService.UpdateOrderStatus(Number(id), dto);
+  }
+
+  //CART SIMULATION
+  @Post('cart')
+  addToCart(
+    @Request() req,
+    @Body() body: { productId: number; quantity: number }
+  ): CartItem[] {
+    return this.cartService.addToCart(req.user.userId, body);
+  }
+
+  @Get('cart')
+  getCart(@Request() req) {
+    return this.cartService.getCart(req.user.userId);
+  }
+
+  @Post('checkout')
+  async checkout(@Request() req) {
+    const cart = this.cartService.getCart(req.user.userId);
+    const order = await this.orderService.checkout(req.user.userId, cart);
+    this.cartService.clearCart(req.user.userId);
+    return order;
   }
 }
 

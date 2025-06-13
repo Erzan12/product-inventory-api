@@ -74,4 +74,30 @@ export class OrderService {
       data: { status: dto.status },
     })
   }
+
+  //check out
+  async checkout(userId: number, cart: { productId: number; quantity: number }[]) {
+    const order = await this.prisma.order.create({
+      data: {
+        userId,
+        items: {
+          create: await Promise.all(cart.map(async item => {
+            const product = await this.prisma.product.findUnique({
+              where: { id: item.productId },
+            });
+            return {
+              productId: item.productId,
+              quantity: item.quantity,
+              price: product?.price || 0,
+            };
+          })),
+        },
+      },
+      include: {
+        items: true,
+      },
+    });
+
+    return order;
+  }
 }
