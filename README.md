@@ -44,6 +44,19 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## API endpoints
+
+```bash
+# User LogIn and Registration - http://localhost:3000/auth/register | http://localhost:3000/auth/login (add "role": "admin" if desired to have Admin Access)
+# Admin Control Access 
+  # Products - POST http://localhost:3000/api/products | UPDATE http://localhost:3000/api/products/:id | DELETE     http://localhost:3000/product/:id
+  # Category - POST http://localhost:3000/api/categories | UPDATE http://localhost:3000/api/categories/:id | DELETE http://localhost:3000/api/categories/:id
+  # Orders - UPDATE ORDER STATUS http://localhost:3000/api/orders/:id/status | VIEW ORDERS | VIEW SPECIFIC ORDER
+# Add Order (Register first then log in to get token) - POST http://localhost:3000/api/orders
+# With Valid Token Access 
+  # Product Category - VIEW http://localhost:3000/api/categories
+  # Products - VIEW http://localhost:3000/product
+```
 ## Run tests
 
 ```bash

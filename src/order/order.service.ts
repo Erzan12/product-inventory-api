@@ -8,6 +8,30 @@ import { UpdateOrderStatusDto, OrderStatus } from './dto/update-order-status.dto
 export class OrderService {
   constructor(private prisma: PrismaService) {}
 
+  async getAllOrders() {
+    return this.prisma.order.findMany({
+      include: {
+        user: true,
+        items: {
+          include: { product: true },
+        },
+      },
+      orderBy: { createdAt: 'desc'},
+    });
+  }
+
+  async getUserOrders(userId: number) {
+    return this.prisma.order.findMany({
+      where: { userId },
+      include: {
+        items: {
+          include: { product: true },
+        },
+      },
+      orderBy: { createdAt: 'desc'},
+    });
+  }
+
   async createOrder(userId: number, dto: CreateOrderDto) {
 
     //validate if product exist before order
@@ -49,5 +73,31 @@ export class OrderService {
       where: { id: orderId },
       data: { status: dto.status },
     })
+  }
+
+  //check out
+  async checkout(userId: number, cart: { productId: number; quantity: number }[]) {
+    const order = await this.prisma.order.create({
+      data: {
+        userId,
+        items: {
+          create: await Promise.all(cart.map(async item => {
+            const product = await this.prisma.product.findUnique({
+              where: { id: item.productId },
+            });
+            return {
+              productId: item.productId,
+              quantity: item.quantity,
+              price: product?.price || 0,
+            };
+          })),
+        },
+      },
+      include: {
+        items: true,
+      },
+    });
+
+    return order;
   }
 }

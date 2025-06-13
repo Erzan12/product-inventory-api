@@ -10,7 +10,7 @@ import { RolesGuard } from 'src/auth/roles.guard';
 
 // @UseGuards(RolesGuard)
 @UseGuards(AuthGuard('jwt'), RolesGuard)
-@Controller('api/product')
+@Controller('api/products')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
