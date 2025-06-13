@@ -3,10 +3,12 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto, OrderStatus } from './dto/update-order-status.dto';
+import { CartService } from 'src/cart/cart.service';
+import { Product } from 'src/product/entities/product.entity';
 
 @Injectable()
 export class OrderService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private cartService: CartService) {}
 
   async getAllOrders() {
     return this.prisma.order.findMany({
@@ -76,20 +78,25 @@ export class OrderService {
   }
 
   //check out
-  async checkout(userId: number, cart: { productId: number; quantity: number }[]) {
+  async checkout(userId: number) {
+
+  if (!userId) {
+      throw new BadRequestException('User ID is missing');
+    }
+
+    const cartItems = await this.cartService.viewCart(userId);
+    if (cartItems.length === 0) {
+      throw new BadRequestException('Cart is empty');
+    }
+
     const order = await this.prisma.order.create({
       data: {
         userId,
         items: {
-          create: await Promise.all(cart.map(async item => {
-            const product = await this.prisma.product.findUnique({
-              where: { id: item.productId },
-            });
-            return {
-              productId: item.productId,
-              quantity: item.quantity,
-              price: product?.price || 0,
-            };
+          create: cartItems.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.product.price,
           })),
         },
       },
@@ -98,6 +105,26 @@ export class OrderService {
       },
     });
 
+    //optional but helpful, to clear the cart after ordering
+    await this.prisma.cartItem.deleteMany({ where: {userId} });
+
     return order;
+  }
+
+  //get users orders
+  async getMyOrders(userId: number) {
+    return this.prisma.order.findMany({
+      where: { userId },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
   }
 }
