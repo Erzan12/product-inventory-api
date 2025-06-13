@@ -1,5 +1,5 @@
 // src/order/order.controller.ts
-import { Controller, Post, Body, Request, Patch, Param, Get } from '@nestjs/common';
+import { Controller, Post, Body, Request, Patch, Param, Get, Req } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Roles } from '../auth/roles.decorator';
@@ -8,32 +8,16 @@ import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
-import { CartService } from 'src/cart/cart.service';
-import { CartItem } from 'src/cart/cart.service';
 
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('api/orders')
 export class OrderController {
-  constructor(
-    private readonly orderService: OrderService,
-    private readonly cartService: CartService
-  ) {}
+  constructor(private readonly orderService: OrderService) {}
 
   @Get()
   @Roles('admin')
   getAllOrders() {
     return this.orderService.getAllOrders();
-  }
-
-  @Get('my')
-  getMyOrders(@Request() req) {
-    return this. orderService.getUserOrders(req.user.userId);
-  }
-  
-  @Post()
-  create(@Body() dto: CreateOrderDto, @Request() req) {
-    const userId = req.user.userId; // extracted from token
-    return this.orderService.createOrder(userId, dto);
   }
 
   @Patch(':id/status')
@@ -42,26 +26,30 @@ export class OrderController {
     return this.orderService.UpdateOrderStatus(Number(id), dto);
   }
 
-  //CART SIMULATION
-  @Post('cart')
-  addToCart(
-    @Request() req,
-    @Body() body: { productId: number; quantity: number }
-  ): CartItem[] {
-    return this.cartService.addToCart(req.user.userId, body);
-  }
+  //customer side on orders and checkout 
+  // @Get('my')
+  // async getMyOrders(@Request() req) {
+  //   console.log('req.user:', req.user);
+  //   return this. orderService.getUserOrders(req.user.userId);
+  // }
+  
+  // @Post()
+  // create(@Body() dto: CreateOrderDto, @Request() req) {
+  //   const userId = req.user.userId; // extracted from token
+  //   return this.orderService.createOrder(userId, dto);
+  // }
 
-  @Get('cart')
-  getCart(@Request() req) {
-    return this.cartService.getCart(req.user.userId);
+  @Get('my')
+  async getMyOrders(@Req() req) {
+    const userId = req.user.userId;
+    console.log('req.user:', req.user);
+    return this.orderService.getMyOrders(userId);
   }
 
   @Post('checkout')
-  async checkout(@Request() req) {
-    const cart = this.cartService.getCart(req.user.userId);
-    const order = await this.orderService.checkout(req.user.userId, cart);
-    this.cartService.clearCart(req.user.userId);
-    return order;
+  checkout(@Request() req) {
+    console.log('req.user:', req.user);
+    return this.orderService.checkout(req.user.userId);
   }
 }
 
