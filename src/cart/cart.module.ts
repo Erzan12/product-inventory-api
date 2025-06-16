@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CartController } from './cart.controller';
-import { PrismaService } from 'prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CartService } from './cart.service';
 
 @Module({
