@@ -10,6 +10,7 @@ import { Product } from 'src/product/entities/product.entity';
 export class OrderService {
   constructor(private prisma: PrismaService, private cartService: CartService) {}
 
+  //get all user orders (admin role)
   async getAllOrders() {
     return this.prisma.order.findMany({
       include: {
@@ -154,6 +155,32 @@ export class OrderService {
       },
       orderBy: {
         createdAt: 'desc',
+      },
+    });
+  }
+
+  //getOrderhistoryByProduct (User)
+  async getOrderHistoryByProduct(productId: number) {
+    return this.prisma.orderItem.findMany({
+      where: { productId },
+      include: {
+        order: {
+          select: {
+            id:true,
+            user: { select: { id: true, email: true } },
+            createdAt: true,
+          },
+        },
+        product: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: { 
+        order: {
+          createdAt: 'desc', // sort by the order.createAt
+        },
       },
     });
   }
