@@ -91,6 +91,7 @@ export class OrderService {
       }
       
       return this.prisma.$transaction(async (tx) => {
+
       // Validate stock first
       for (const item of cartItems) {
         const product = await tx.product.findUnique({
@@ -108,22 +109,36 @@ export class OrderService {
         }
       }
 
+      // Calculate total price
+      let total = 0;
+      const itemsData = cartItems.map((item) => {
+        const itemTotal = item.quantity * item.product.price;
+        total += itemTotal;
+        return {
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.product.price,
+        };
+      });
+
       const order = await this.prisma.order.create({
         data: {
           userId,
+          total,
           items: {
-            create: cartItems.map((item) => ({
-              productId: item.productId,
-              quantity: item.quantity,
-              price: item.product.price,
-            })),
+            create: itemsData
+            // .map((item) => ({
+            //   productId: item.productId,
+            //   quantity: item.quantity,
+            //   price: item.product.price,
+            // })),
           },
         },
         include: {
           items: true,
         },
       });
-
+        console.log('Calculated total:', total);
           // Decrement product quantities
       for (const item of cartItems) {
         await tx.product.update({

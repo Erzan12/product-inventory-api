@@ -59,6 +59,7 @@ model Order {
   user      User        @relation(fields: [userId], references: [id])
   items     OrderItem[]
   status    String      @default("pending") // or enum later
+  total     Float       @default(0)
   createdAt DateTime    @default(now())
 }
 
