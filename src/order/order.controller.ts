@@ -1,5 +1,5 @@
 // src/order/order.controller.ts
-import { Controller, Post, Body, Request, Patch, Param, Get, Req } from '@nestjs/common';
+import { Controller, Post, Body, Request, Patch, Param, Get, Req, ParseIntPipe } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Roles } from '../auth/roles.decorator';
@@ -14,16 +14,24 @@ import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
+  //get all user orders (admin role)
   @Get()
   @Roles('admin')
   getAllOrders() {
     return this.orderService.getAllOrders();
   }
 
+  //update user order (admin role)
   @Patch(':id/status')
   @Roles('admin')
   updateStatus(@Param('id') id: string, @Body() dto: UpdateOrderStatusDto) {
     return this.orderService.UpdateOrderStatus(Number(id), dto);
+  }
+
+  @Get('product/:productId/history')
+  @Roles('admin')
+  getProductOrderHistory(@Param('productId', ParseIntPipe) productId: number) {
+    return this.orderService.getOrderHistoryByProduct(productId);
   }
 
   //customer side on orders and checkout 
@@ -39,6 +47,8 @@ export class OrderController {
   //   return this.orderService.createOrder(userId, dto);
   // }
 
+
+  //user side
   @Get('my')
   async getMyOrders(@Req() req) {
     const userId = req.user.userId;
