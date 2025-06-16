@@ -1,4 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, HttpException, HttpStatus  } from '@nestjs/common';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { RESPONSE_MESSAGES } from 'src/common/constants/response-messages.constant';
+import { buildErrorResponse } from 'src/common/helpers/response-helper';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -7,11 +10,26 @@ import { UpdateProductDto } from './dto/update-product.dto';
 export class ProductService {
   constructor(private prisma: PrismaService) {}
 
-  create(data: CreateProductDto) {
-      return this.prisma.product.create({
-        data,
-        include: { category: true },
-      });
+  async createProduct(data: CreateProductDto) {
+    try {
+      return await this.prisma.product.create({ data });
+    } catch (error) {
+      if (
+        error instanceof PrismaClientKnownRequestError && 
+        error.code === 'P2003'
+      ) {
+        throw new HttpException(
+          buildErrorResponse(
+            RESPONSE_MESSAGES.PRODUCT.CATEGORY_NOT_FOUND,
+            'ForeignKeyViolation',
+            HttpStatus.BAD_REQUEST,
+          ),
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      throw error;
+    }
   }
 
   findAll() {
