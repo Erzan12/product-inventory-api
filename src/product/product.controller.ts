@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { RestockProductDto } from './dto/restock-product.dto';
 import { Roles } from '../auth/roles.decorator';
 // import { Role } from '../auth/role.enum';
 import { UseGuards } from '@nestjs/common';
@@ -40,5 +41,15 @@ export class ProductController {
   @Roles('admin')
   remove(@Param('id') id: string) {
     return this.productService.remove(+id);
+  }
+
+  //Admin restock product
+  @Patch(':id/restock')
+  @Roles('admin')
+  restock(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: RestockProductDto
+  ) {
+    return this.productService.restockProduct(id, dto.quantity);
   }
 }
