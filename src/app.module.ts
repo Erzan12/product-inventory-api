@@ -7,6 +7,8 @@ import { AuthModule } from './auth/auth.module';
 import { OrderModule } from './order/order.module';
 import { CartModule } from './cart/cart.module';
 import { ConfigModule } from '@nestjs/config';
+import { InvoiceService } from './invoice/invoice.service';
+import { InvoiceModule } from './invoice/invoice.module';
 
 @Module({
   imports: [ 
@@ -17,8 +19,8 @@ import { ConfigModule } from '@nestjs/config';
             OrderModule, 
             CartModule,  
             ConfigModule.forRoot({isGlobal: true, // makes config available everywhere
-            }),
+            }), InvoiceModule,
           ],
-  providers: [PrismaService],
+  providers: [PrismaService, InvoiceService],
 })
 export class AppModule {}

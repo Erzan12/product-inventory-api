@@ -9,3 +9,15 @@ export const errorResponse = (message: string, error: any = null) => ({
   message,
   error,
 });
+
+export function buildErrorResponse(
+  message: string,
+  error: string,
+  statusCode: number,
+) {
+  return {
+    statusCode,
+    message,
+    error,
+  };
+}
