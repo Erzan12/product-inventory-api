@@ -1,4 +1,4 @@
-import { Controller, Delete, Post, Get, Patch, Request, Param, Body, BadRequestException } from '@nestjs/common';
+import { Controller, Delete, Post, Get, Patch, Request, Param, Body, Req, BadRequestException } from '@nestjs/common';
 import { CartService } from '../cart/cart.service';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -21,17 +21,30 @@ export class CartController {
 
     @Get()
     viewCart(@Request() req) {
-    const userId = req.user.id;
+    const userId = req.user.userIdid;
     return this.cartService.viewCart(userId);
     }
 
-    @Patch(':id')
-    updateQuantity(@Param('id') id: string, @Body('quantity') quantity: number) {
-    return this.cartService.updateQuantity(+id, quantity);
+    @Patch()
+    updateQuantity(
+        @Req() req,
+        @Body('productId') productId: number,
+        @Body('quantity') quantity: number,
+    ) {
+        const userId = req.user.userId; // pulled from JWT (ensure auth middleware is used)
+        return this.cartService.updateQuantity(userId, productId, quantity);
     }
 
-    @Delete(':id')
-    removeFromCart(@Param('id') id: string) {
-    return this.cartService.removeFromCart(+id);
+    @Delete()
+    removeFromCart(@Req() req, @Body('productId') productId: number) {
+        const userId = req.user.userId;
+        return this.cartService.removeFromCart(userId, productId);
     }
+
+            // const deleted = await this.prisma.cartItem.delete({
+            //     where: { userId_productId: { userId, productId } },
+            // });
+    
+            // return successResponse(RESPONSE_MESSAGES.CART.ITEM_REMOVED, deleted);
+            // }
 }

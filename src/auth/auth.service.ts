@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { RESPONSE_MESSAGES } from 'src/common/constants/response-messages.constant';
 import { PrismaService } from '../../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -26,17 +27,23 @@ export class AuthService {
                 role: userRole, // default role
             },
         });
-        return { message: 'User created', userId: user.id};
+        return { 
+            message: RESPONSE_MESSAGES.USER.CREATED, 
+            userId: user.id
+        };
     }
 
     async login(email: string, password: string) {
         const user = await this.prisma.user.findUnique({ where: { email } });
         if (!user || !(await bcrypt.compare(password, user.password))) {
-            throw new UnauthorizedException('Invalid credentials');
+            throw new UnauthorizedException({ message: RESPONSE_MESSAGES.USER.NOT_FOUND });
         }
 
         const token = this.jwt.sign({ sub: user.id, role: user.role});
-        return { access_token: token};
+        return { 
+            message: RESPONSE_MESSAGES.AUTH.LOGIN_SUCCESS,
+            Your_Access_Token: token
+        };
     }
 
     async validateUser(userId: number) {
