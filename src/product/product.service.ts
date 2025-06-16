@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -37,5 +37,21 @@ export class ProductService {
 
   remove(id: number) {
     return this.prisma.product.delete({ where: { id } });
+  }
+
+  //Admin restock product
+  async restockProduct(productId: number, quantity: number) {
+    const product = await this.prisma.product.findUnique({ where: { id: productId } });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return this.prisma.product.update({
+      where: { id: productId },
+      data: {
+        quantity: product.quantity + quantity,
+      },
+    });
   }
 }
