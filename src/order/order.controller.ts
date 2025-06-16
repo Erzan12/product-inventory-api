@@ -51,9 +51,8 @@ export class OrderController {
   //user side
   @Get('my')
   async getMyOrders(@Req() req) {
-    const userId = req.user.userId;
     console.log('req.user:', req.user);
-    return this.orderService.getMyOrders(userId);
+    return this.orderService.getMyOrders(req.user.userId);
   }
 
   @Post('checkout')
