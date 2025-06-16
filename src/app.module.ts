@@ -6,9 +6,19 @@ import { CategoryModule } from './category/category.module';
 import { AuthModule } from './auth/auth.module';
 import { OrderModule } from './order/order.module';
 import { CartModule } from './cart/cart.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [ProductModule, CategoryModule, PrismaModule, AuthModule, OrderModule, CartModule],
+  imports: [ 
+            ProductModule,
+            CategoryModule,
+            PrismaModule, 
+            AuthModule, 
+            OrderModule, 
+            CartModule,  
+            ConfigModule.forRoot({isGlobal: true, // makes config available everywhere
+            }),
+          ],
   providers: [PrismaService],
 })
 export class AppModule {}
