@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, HttpException, HttpStatus  } from '@nestjs/common';
+import { Injectable, NotFoundException, HttpException, HttpStatus, BadRequestException  } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { RESPONSE_MESSAGES } from 'src/common/constants/response-messages.constant';
 import { buildErrorResponse } from 'src/common/helpers/response-helper';
@@ -53,7 +53,16 @@ export class ProductService {
    });
   }
 
-  remove(id: number) {
+  //Delete product
+  async remove(id: number) {
+    const orderItems = await this.prisma.orderItem.findMany({
+      where: { productId: id },
+    });
+
+    if (orderItems.length > 0) {
+      throw new BadRequestException('Cannot delete product: it is referenced in order items.');
+    }
+
     return this.prisma.product.delete({ where: { id } });
   }
 
