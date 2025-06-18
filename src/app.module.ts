@@ -9,6 +9,8 @@ import { CartModule } from './cart/cart.module';
 import { ConfigModule } from '@nestjs/config';
 import { InvoiceService } from './invoice/invoice.service';
 import { InvoiceModule } from './invoice/invoice.module';
+import { MailService } from './mail/mail.service';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [ 
@@ -19,8 +21,8 @@ import { InvoiceModule } from './invoice/invoice.module';
             OrderModule, 
             CartModule,  
             ConfigModule.forRoot({isGlobal: true, // makes config available everywhere
-            }), InvoiceModule,
+            }), InvoiceModule, MailModule
           ],
-  providers: [PrismaService, InvoiceService],
+  providers: [PrismaService, InvoiceService, MailService],
 })
 export class AppModule {}

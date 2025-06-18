@@ -5,10 +5,13 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto, OrderStatus } from './dto/update-order-status.dto';
 import { CartService } from 'src/cart/cart.service';
 import { Product } from 'src/product/entities/product.entity';
+import { MailService } from 'src/mail/mail.service';
+import * as streamBuffers from 'stream-buffers';
+import * as PDFDocument from 'pdfkit';
 
 @Injectable()
 export class OrderService {
-  constructor(private prisma: PrismaService, private cartService: CartService) {}
+  constructor(private prisma: PrismaService, private cartService: CartService, private mailService: MailService) {}
 
   //get all user orders (admin role)
   async getAllOrders() {
@@ -79,6 +82,218 @@ export class OrderService {
   }
 
   //check out or order item
+  // async checkout(userId: number) {
+
+  //   if (!userId) {
+  //       throw new BadRequestException('User ID is missing');
+  //     }
+
+  //     const cartItems = await this.cartService.viewCart(userId);
+  //     if (cartItems.length === 0) {
+  //       throw new BadRequestException('Cart is empty');
+  //     }
+      
+  //     return this.prisma.$transaction(async (tx) => {
+
+  //     // Validate stock first
+  //     for (const item of cartItems) {
+  //       const product = await tx.product.findUnique({
+  //         where: { id: item.productId },
+  //       });
+
+  //       if (!product) {
+  //         throw new NotFoundException(`Product ID ${item.productId} not found`);
+  //       }
+
+  //       if (item.quantity > product.quantity) {
+  //         throw new BadRequestException(
+  //           `Not enough stock for "${product.name}". Available: ${product.quantity}`
+  //         );
+  //       }
+  //     }
+
+  //     // Calculate total price
+  //     let total = 0;
+  //     const itemsData = cartItems.map((item) => {
+  //       const itemTotal = item.quantity * item.product.price;
+  //       total += itemTotal;
+  //       return {
+  //         productId: item.productId,
+  //         quantity: item.quantity,
+  //         price: item.product.price,
+  //       };
+  //     });
+
+  //     const order = await this.prisma.order.create({
+  //       data: {
+  //         userId,
+  //         total,
+  //         items: {
+  //           create: itemsData
+  //           // .map((item) => ({
+  //           //   productId: item.productId,
+  //           //   quantity: item.quantity,
+  //           //   price: item.product.price,
+  //           // })),
+  //         },
+  //       },
+  //       include: {
+  //         items: true,
+  //         user: true,
+  //       },
+  //     });
+  //       console.log('Calculated total:', total);
+  //         // Decrement product quantities
+  //     for (const item of cartItems) {
+  //       await tx.product.update({
+  //         where: { id: item.productId },
+  //         data: {
+  //           quantity: { decrement: item.quantity },
+  //         },
+  //       });
+  //     }
+
+  //     //optional but helpful, to clear the cart after ordering
+  //     await this.prisma.cartItem.deleteMany({ where: {userId} });
+
+  //     // await this.mailService.sendInvoiceEmail(
+  //     //   order.user.email,
+  //     //   'Order Confirmation - Invoice',
+  //     //   `<h2>Thank you for your order</h2>
+  //     //   <p>Your order ID is ${order.id}</p>
+  //     //   <p>Total: ₱${order.total}</p>`
+  //     // );
+
+  //     // After order is created
+  //     const doc = new PDFDocument({ margin: 50 });
+  //     const bufferStream = new streamBuffers.WritableStreamBuffer();
+
+  //     doc.pipe(bufferStream);
+
+  //     // === Optional Logo & Header ===
+  //     doc.image('src/assets/logo.jpg', 50, 45, { width: 50 }); // Uncomment if you have a logo
+
+  //     doc
+  //       .font('Helvetica-Bold')
+  //       .fontSize(20)
+  //       .fillColor('#000000')
+  //       .text('Dummy Business', 110, 57)
+  //       .fontSize(10)
+  //       .text('123 Business St, Metro Manila', 110, 75)
+  //       .text('dummy@example.com', 110, 90)
+  //       .moveDown(2);
+
+  //     // === Invoice Info ===
+  //     doc
+  //       .font('Helvetica')
+  //       .fontSize(12)
+  //       .fillColor('black')
+  //       .text(`Invoice #: ${order.id}`)
+  //       .text(`Date: ${new Date().toLocaleDateString()}`)
+  //       .text(`Customer Email: ${order.user.email}`)
+  //       .moveDown(3);
+
+  //     // === Items Table Header ===
+  //     const itemX = 50;
+  //     const qtyX = 290;
+  //     const priceX = 350;
+  //     const subtotalX = 450;
+
+  //     const headerY = doc.y;
+
+  //     doc
+  //       .strokeColor('#cccccc')
+  //       .lineWidth(1)
+  //       .moveTo(itemX, doc.y)
+  //       .lineTo(555, doc.y)
+  //       .stroke()
+  //       .moveDown(5);
+
+  //     doc.font('Helvetica-Bold').fontSize(12);
+  //     doc.text('Item', itemX, headerY);
+  //     doc.text('Qty', qtyX, headerY);
+  //     doc.text('Price', priceX, headerY);
+  //     doc.text('Subtotal', subtotalX, headerY);
+
+  //     doc.moveDown(0.5);
+  //     doc.strokeColor('#eeeeee').lineWidth(1).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+  //     doc.moveDown(0.3);
+
+  //     // === Order Items ===
+  //     doc.font('Helvetica').fontSize(12);
+
+  //     order.items.forEach((item) => {
+  //       const subtotal = item.quantity * item.price;
+  //       const currentY = doc.y;
+
+  //       doc.text(`Product ID #${item.productId}`, itemX, currentY);
+  //       doc.text(`${item.quantity}`, qtyX, currentY);
+  //       doc.text(`PHP${item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, priceX, currentY);
+  //       doc.text(`PHP${subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, subtotalX, currentY);
+
+  //       doc.moveDown(0.5);
+  //     });
+
+  //     // === Total Line ===
+  //     doc.moveDown(1);
+  //     doc.strokeColor('#cccccc').lineWidth(1).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+  //     doc.moveDown(0.5);
+
+  //     doc
+  //       .font('Helvetica-Bold')
+  //       .fontSize(12)
+  //       .text(`Total: PHP${order.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, subtotalX, doc.y);
+
+  //     // === Footer ===
+  //     doc.moveDown(3);
+  //     doc
+  //       .fontSize(10)
+  //       .fillColor('gray')
+  //       .text('Thank you for your purchase!', { align: 'center' })
+  //       .moveDown(0.5)
+  //       .fillColor('black')
+  //       .font('Helvetica-Bold')
+  //       .text('If you have questions, contact', { align: 'center' })
+  //       .font('Helvetica')
+  //       .text('billing@dummybiz.com', { align: 'center' });
+
+  //     doc.end();
+  //     await new Promise((resolve) => doc.on('end', resolve));
+
+  //     const pdfBuffer = bufferStream.getContents() as Buffer;
+
+  //     if (!pdfBuffer) {
+  //       throw new Error('❌ Failed to generate PDF buffer for invoice.');
+  //     }
+
+  //     // === Email HTML content ===
+  //     const htmlContent = `
+  //       <div style="font-family: Arial, sans-serif; padding: 16px;">
+  //         <h2 style="color: #2b2e4a;">Thank you for your order!</h2>
+  //         <p>Hi ${order.user.email},</p>
+  //         <p>We appreciate your purchase. Please find your invoice attached below.</p>
+  //         <hr />
+  //         <p><strong>Order ID:</strong> ${order.id}</p>
+  //         <p><strong>Total:</strong> ₱${order.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+  //         <p>If you have any questions, feel free to reply to this email.</p>
+  //         <br />
+  //         <p>Best regards,<br><strong>Dummy Business</strong></p>
+  //       </div>
+  //     `;
+
+  //     await this.mailService.sendInvoiceEmail(
+  //       order.user.email,
+  //       'Your Invoice from Dummy Business',
+  //       htmlContent,
+  //       pdfBuffer,
+  //       `invoice-${order.id}.pdf`
+  //     );
+
+  //     console.log('✅ Email sent (or attempted)');
+  //     return order;
+  //   });
+  // }
+
   async checkout(userId: number) {
 
     if (!userId) {
@@ -136,6 +351,7 @@ export class OrderService {
         },
         include: {
           items: true,
+          user: true,
         },
       });
         console.log('Calculated total:', total);
@@ -152,8 +368,173 @@ export class OrderService {
       //optional but helpful, to clear the cart after ordering
       await this.prisma.cartItem.deleteMany({ where: {userId} });
 
-      return order;
+      // After order is created
+      const doc = new PDFDocument({ margin: 50 });
+      const bufferStream = new streamBuffers.WritableStreamBuffer();
+      doc.pipe(bufferStream);
 
+      // === Logo & Header ===
+      doc.image('src/assets/pictures/logo.jpg', 50, 45, { width: 50 }); // Optional
+
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(20)
+        .fillColor('#000000')
+        .text('Dummy Business', 110, 57)
+        .fontSize(10)
+        .text('123 Business St, Metro Manila', 110, 75)
+        .text('dummy@example.com', 110, 90)
+        .moveDown(2);
+
+      // === Invoice Info ===
+      doc
+        .font('Helvetica')
+        .fontSize(12)
+        .fillColor('black')
+        .text(`Invoice #: ${order.id}`)
+        .text(`Date: ${new Date().toLocaleDateString()}`)
+        .text(`Customer Email: ${order.user.email}`)
+        .moveDown(2);
+
+      // === Table Column Layout ===
+      const itemX = 50;
+      const itemWidth = 240;
+      const qtyX = 290;
+      const qtyWidth = 50;
+      const priceX = 350;
+      const priceWidth = 80;
+      const subtotalX = 450;
+      const subtotalWidth = 100;
+
+      // === Line ABOVE Table Header ===
+      doc.moveDown(1);
+      doc
+        .strokeColor('#cccccc')
+        .lineWidth(1)
+        .moveTo(itemX, doc.y)
+        .lineTo(550, doc.y)
+        .stroke()
+        .moveDown(0.5);
+
+      // === Table Header ===
+      const headerY = doc.y;
+      doc.font('Helvetica-Bold').fontSize(12);
+
+      doc.text('Item', itemX, headerY, { width: itemWidth, align: 'center' }); // LEFT aligned
+      doc.text('Qty', qtyX, headerY, { width: qtyWidth });
+      doc.text('Price', priceX, headerY, { width: priceWidth, align: 'center' });
+      doc.text('Subtotal', subtotalX, headerY, { width: subtotalWidth, align: 'center' });
+
+      // === Line BELOW Table Header ===
+      doc.moveDown(0.3);
+      doc
+        .strokeColor('#eeeeee')
+        .lineWidth(1)
+        .moveTo(itemX, doc.y)
+        .lineTo(550, doc.y)
+        .stroke()
+        .moveDown(0.3);
+
+      doc.font('Helvetica').fontSize(12);
+
+      order.items.forEach((item) => {
+        const y = doc.y; // Capture current Y before writing the row
+        const subtotal = item.quantity * item.price;
+
+        // Draw the row's text
+        doc.text(`Product ID #${item.productId}`, itemX, y, {
+          width: itemWidth,
+          align: 'left', // Make sure this stays left-aligned
+        });
+        doc.text(`${item.quantity}`, qtyX, y, {
+          width: qtyWidth,
+        });
+        doc.text(`₱${item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, priceX, y, {
+          width: priceWidth,
+          align: 'center',
+        });
+        doc.text(`₱${subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, subtotalX, y, {
+          width: subtotalWidth,
+          align: 'center',
+        });
+
+        // 🔽 Add a horizontal line after this row
+        const lineY = doc.y + 5; // Optional spacing before line
+        doc.strokeColor('#cccccc').lineWidth(1)
+          .moveTo(itemX, lineY)
+          .lineTo(550, lineY)
+          .stroke();
+
+        doc.moveDown(0.5); // Adds spacing before the next row
+      });
+
+      // === Total Line ===
+      doc.moveDown(0.5);
+      doc
+        .strokeColor('#cccccc')
+        .lineWidth(1)
+        .moveTo(itemX, doc.y)
+        .lineTo(550, doc.y)
+        .stroke()
+        .moveDown(0.5);
+
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(12)
+        .text(
+          `Total: ₱${order.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+          subtotalX,
+          doc.y,
+          { width: subtotalWidth, align: 'center' }
+        );
+
+      // === Footer ===
+      doc.moveDown(3);
+      doc
+        .fontSize(10)
+        .fillColor('gray')
+        .text('Thank you for your purchase!', { align: 'center' })
+        .moveDown(0.5)
+        .fillColor('black')
+        .font('Helvetica-Bold')
+        .text('If you have questions, contact', { align: 'center' })
+        .font('Helvetica')
+        .text('billing@dummybiz.com', { align: 'center' });
+
+      doc.end();
+      await new Promise((resolve) => doc.on('end', resolve));
+
+      const pdfBuffer = bufferStream.getContents() as Buffer;
+
+      if (!pdfBuffer) {
+        throw new Error('❌ Failed to generate PDF buffer for invoice.');
+      }
+
+      // === Email HTML content ===
+      const htmlContent = `
+        <div style="font-family: Arial, sans-serif; padding: 16px;">
+          <h2 style="color: #2b2e4a;">Thank you for your order!</h2>
+          <p>Hi ${order.user.email},</p>
+          <p>We appreciate your purchase. Please find your invoice attached below.</p>
+          <hr />
+          <p><strong>Order ID:</strong> ${order.id}</p>
+          <p><strong>Total:</strong> ₱${order.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+          <p>If you have any questions, feel free to reply to this email.</p>
+          <br />
+          <p>Best regards,<br><strong>Dummy Business</strong></p>
+        </div>
+      `;
+
+      await this.mailService.sendInvoiceEmail(
+        order.user.email,
+        'Your Invoice from Dummy Business',
+        htmlContent,
+        pdfBuffer,
+        `invoice-${order.id}.pdf`
+      );
+
+      console.log('✅ Email sent (or attempted)');
+      return order;
     });
   }
 
