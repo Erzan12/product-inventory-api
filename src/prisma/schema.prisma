@@ -85,3 +85,10 @@ model CartItem {
 
   @@unique([userId, productId]) // each user can only have one of the same product in cart
 }
+
+model InventorySnapshot {
+  id          Int       @id @default(autoincrement())
+  month       String    @unique // e.g "2025-05"
+  totalValue  Float
+  createdAt   DateTime  @default(now())
+}
