@@ -18,4 +18,11 @@ export class AnalyticsController {
             data: topProducts,
         };
     }
+
+    // Manual testing for snapshots can be testing in postman
+    // @Get('snapshot/test')
+    // async testSnapshotManually() {
+    //     await this.analyticsService.saveMonthlyInventorySnapshot();
+    //     return { message: '✅ Snapshot manually triggered.' };
+    // }
 }
