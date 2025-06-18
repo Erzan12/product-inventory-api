@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query} from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -15,6 +15,23 @@ import { RolesGuard } from 'src/auth/roles.guard';
 @Controller('api/products')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
+
+//Admin restock product
+  @Patch(':id/restock')
+  @Roles('admin')
+  restock(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: RestockProductDto
+  ) {
+    return this.productService.restockProduct(id, dto.quantity);
+  }
+
+  //Admin low stock alert
+  @Get('low-stock')
+  @Roles('admin')
+  getLowStockProducts(@Query('threshold') threshold = 5) {
+    return this.productService.getLowStockProducts(threshold);
+  }
 
   @Post()
   @Roles('admin')
@@ -44,13 +61,4 @@ export class ProductController {
     return this.productService.remove(+id);
   }
 
-  //Admin restock product
-  @Patch(':id/restock')
-  @Roles('admin')
-  restock(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: RestockProductDto
-  ) {
-    return this.productService.restockProduct(id, dto.quantity);
-  }
 }
