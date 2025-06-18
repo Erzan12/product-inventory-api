@@ -81,4 +81,18 @@ export class ProductService {
       },
     });
   }
+
+  //Admin low stocks alert
+  async getLowStockProducts(threshold: number) {
+    return this.prisma.product.findMany({
+      where: {
+        quantity: {
+          lt: threshold,
+        },
+      },
+      orderBy: {
+        quantity: 'asc',
+      },
+    });
+  }
 }

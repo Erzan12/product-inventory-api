@@ -8,14 +8,17 @@ export class CreateProductDto {
   @IsString()
   description?: string;
 
+  @IsInt()
   @IsNumber()
   @IsPositive()
   price: number;
 
+  @IsInt()
   @IsNumber()
   @Min(0)
   quantity: number;
 
+  @IsInt()
   @IsNumber()
   categoryId: number; // required for connect
 }
