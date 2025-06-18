@@ -324,11 +324,14 @@ export class OrderService {
         }
       }
 
-      // Calculate total price
-      let total = 0;
+      // Calculate total price with tax
+
+      const taxRate = 0.12;
+      let subTotal = 0;
+
       const itemsData = cartItems.map((item) => {
         const itemTotal = item.quantity * item.product.price;
-        total += itemTotal;
+        subTotal += itemTotal;
         return {
           productId: item.productId,
           quantity: item.quantity,
@@ -336,21 +339,23 @@ export class OrderService {
         };
       });
 
+      const tax = subTotal * taxRate;
+      const total = subTotal + tax;
+
       const order = await this.prisma.order.create({
         data: {
           userId,
           total,
           items: {
             create: itemsData
-            // .map((item) => ({
-            //   productId: item.productId,
-            //   quantity: item.quantity,
-            //   price: item.product.price,
-            // })),
           },
         },
         include: {
-          items: true,
+          items: {
+            include: { 
+              product: true, // ensures you get `product.name`
+            },
+          },
           user: true,
         },
       });
@@ -398,11 +403,11 @@ export class OrderService {
 
       // === Table Column Layout ===
       const itemX = 50;
-      const itemWidth = 240;
-      const qtyX = 290;
+      const itemWidth = 220;
+      const qtyX = 250;
       const qtyWidth = 50;
-      const priceX = 350;
-      const priceWidth = 80;
+      const priceX = 320;
+      const priceWidth = 100;
       const subtotalX = 450;
       const subtotalWidth = 100;
 
@@ -442,18 +447,20 @@ export class OrderService {
         const subtotal = item.quantity * item.price;
 
         // Draw the row's text
-        doc.text(`Product ID #${item.productId}`, itemX, y, {
+        doc.text(item.product?.name ?? `Product ID #${item.productId}`, itemX, y, { //added a product Id # fallback incase product name is empty
           width: itemWidth,
           align: 'left', // Make sure this stays left-aligned
         });
         doc.text(`${item.quantity}`, qtyX, y, {
           width: qtyWidth,
         });
-        doc.text(`₱${item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, priceX, y, {
+
+        // Manually type PHP since Peso sign display +- in the invoice | to be fixed in the future
+        doc.text(`Php${item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, priceX, y, { 
           width: priceWidth,
           align: 'center',
         });
-        doc.text(`₱${subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, subtotalX, y, {
+        doc.text(`Php${subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, subtotalX, y, {
           width: subtotalWidth,
           align: 'center',
         });
@@ -465,7 +472,7 @@ export class OrderService {
           .lineTo(550, lineY)
           .stroke();
 
-        doc.moveDown(0.5); // Adds spacing before the next row
+        doc.moveDown(1); // Adds spacing before the next row
       });
 
       // === Total Line ===
@@ -473,7 +480,7 @@ export class OrderService {
       doc
         .strokeColor('#cccccc')
         .lineWidth(1)
-        .moveTo(itemX, doc.y)
+        .moveTo(qtyX, doc.y)
         .lineTo(550, doc.y)
         .stroke()
         .moveDown(0.5);
@@ -481,12 +488,15 @@ export class OrderService {
       doc
         .font('Helvetica-Bold')
         .fontSize(12)
-        .text(
-          `Total: ₱${order.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
-          subtotalX,
-          doc.y,
-          { width: subtotalWidth, align: 'center' }
-        );
+
+        .moveDown(0.5)
+        .text(`Tax (12%): Php${tax.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, subtotalX, doc.y, {
+          width: subtotalWidth,
+        })
+        .moveDown(0.5)
+        .text(`Total: Php${total.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, subtotalX, doc.y, {
+          width: subtotalWidth,
+        });
 
       // === Footer ===
       doc.moveDown(3);
@@ -518,7 +528,9 @@ export class OrderService {
           <p>We appreciate your purchase. Please find your invoice attached below.</p>
           <hr />
           <p><strong>Order ID:</strong> ${order.id}</p>
-          <p><strong>Total:</strong> ₱${order.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+          <p><strong>Subtotal:</strong> ₱${subTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+          <p><strong>Tax (12%):</strong> ₱${tax.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+          <p><strong>Total:</strong> ₱${total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
           <p>If you have any questions, feel free to reply to this email.</p>
           <br />
           <p>Best regards,<br><strong>Dummy Business</strong></p>
