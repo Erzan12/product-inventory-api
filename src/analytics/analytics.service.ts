@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 export interface ChangeInfo {
@@ -11,6 +12,8 @@ export interface ChangeInfo {
 
 @Injectable()
 export class AnalyticsService {
+    private readonly logger = new Logger(AnalyticsService.name);
+
     constructor(private prisma: PrismaService) {}
 
     async getInventoryAnalytics() {
@@ -92,4 +95,34 @@ export class AnalyticsService {
 
         return withNames
     }
+
+    // == Monthly Snapshot scheduler == | This will run automatically at midnight on the 1st of every month.
+
+    @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)
+    async saveMonthlyInventorySnapshot() {
+        const products = await this.prisma.product.findMany();
+        const totalValue = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
+
+        const now = new Date();
+        const monthKey = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+
+        await this.prisma.inventorySnapshot.upsert({
+            where: { month: monthKey },
+            update: { totalValue },
+            create: {
+                month: monthKey,
+                totalValue,
+            },
+        });
+
+        this.logger.log(`✅ Inventory snapshot saved for ${monthKey} with value ₱${totalValue.toFixed(2)}`);
+    }
+
+    // Automatic testing of inventory snapshot no need to be enrolled in controller or use postman
+    //  for testing it will automatically retrieved data in the log when a minute pass by
+    // @Cron(CronExpression.EVERY_MINUTE)
+    // async testSnapshot() {
+    //     this.logger.log('🧪 Testing monthly snapshot scheduler...');
+    //     await this.saveMonthlyInventorySnapshot();
+    // }
 }

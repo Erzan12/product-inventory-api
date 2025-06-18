@@ -14,6 +14,7 @@ import { MailModule } from './mail/mail.module';
 import { AnalyticsService } from './analytics/analytics.service';
 import { AnalyticsController } from './analytics/analytics.controller';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [ 
@@ -23,6 +24,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
             AuthModule, 
             OrderModule, 
             CartModule,  
+            ScheduleModule.forRoot(),
             ConfigModule.forRoot({isGlobal: true, // makes config available everywhere
             }), InvoiceModule, MailModule, AnalyticsModule
           ],
