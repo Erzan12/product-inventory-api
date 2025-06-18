@@ -11,6 +11,9 @@ import { InvoiceService } from './invoice/invoice.service';
 import { InvoiceModule } from './invoice/invoice.module';
 import { MailService } from './mail/mail.service';
 import { MailModule } from './mail/mail.module';
+import { AnalyticsService } from './analytics/analytics.service';
+import { AnalyticsController } from './analytics/analytics.controller';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [ 
@@ -21,8 +24,9 @@ import { MailModule } from './mail/mail.module';
             OrderModule, 
             CartModule,  
             ConfigModule.forRoot({isGlobal: true, // makes config available everywhere
-            }), InvoiceModule, MailModule
+            }), InvoiceModule, MailModule, AnalyticsModule
           ],
-  providers: [PrismaService, InvoiceService, MailService],
+  providers: [PrismaService, InvoiceService, MailService, AnalyticsService],
+  controllers: [AnalyticsController],
 })
 export class AppModule {}
