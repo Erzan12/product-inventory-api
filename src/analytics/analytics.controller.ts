@@ -1,11 +1,18 @@
 import { Controller, Get } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
+import { Roles } from '../auth/roles.decorator';
+// import { Role } from '../auth/role.enum';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from 'src/auth/roles.guard';
 
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('api/analytics')
 export class AnalyticsController {
     constructor( private analyticsService: AnalyticsService) {}
     
-    @Get('inventory')
+    @Get('admin-inventory')
+    @Roles('admin')
     getInventoryStats() {
         return this.analyticsService.getInventoryAnalytics();
     }
