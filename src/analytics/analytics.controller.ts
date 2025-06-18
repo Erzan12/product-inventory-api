@@ -4,14 +4,10 @@ import { AnalyticsService } from './analytics.service';
 @Controller('api/analytics')
 export class AnalyticsController {
     constructor( private analyticsService: AnalyticsService) {}
-
+    
     @Get('inventory')
-    async getInventoryStats() {
-        const inventoryValue = await this.analyticsService.getInventoryAnalytics();
-            return {
-                message: 'Current Inventory Overview',
-                data: inventoryValue,
-            }
+    getInventoryStats() {
+        return this.analyticsService.getInventoryAnalytics();
     }
 
     @Get('top-products')
