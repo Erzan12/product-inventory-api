@@ -592,4 +592,25 @@ export class OrderService {
       },
     });
   }
+
+  async getSalesTrends(period: 'day' | 'month' = 'day') {
+
+    const format = period === 'month' ? 'yyyy-MM' : 'yyyy-MM-dd';
+
+    const results = await this.prisma.$queryRawUnsafe<any[]>(`
+      SELECT
+       to_char("createdAt", '${format}') AS "date",
+        SUM(total) as "totalSales",
+        COUNT(*) as "ordersCount"
+      FROM "Order"
+      GROUP BY "date"
+      ORDER BY "date" ASC
+    `);
+
+    return results.map((row) => ({
+      date: row.date,
+      totalSales: Number(row.totalSales ?? 0),
+      ordersCount: Number(row.ordersCount ?? 0),
+    }));
+  }
 }

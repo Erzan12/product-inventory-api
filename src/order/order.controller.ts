@@ -1,5 +1,5 @@
 // src/order/order.controller.ts
-import { Controller, Post, Body, Request, Patch, Param, Get, Req, ParseIntPipe } from '@nestjs/common';
+import { Controller, Post, Body, Request, Patch, Param, Get, Req, ParseIntPipe, Query } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Roles } from '../auth/roles.decorator';
@@ -32,6 +32,12 @@ export class OrderController {
   @Roles('admin')
   getProductOrderHistory(@Param('productId', ParseIntPipe) productId: number) {
     return this.orderService.getOrderHistoryByProduct(productId);
+  }
+
+  // Sales trends
+  @Get('sales-trends')
+  getSalesTrends(@Query('period') period: 'day' | 'month' = 'day' ) {
+    return this.orderService.getSalesTrends(period);
   }
 
   //customer side on orders and checkout 
