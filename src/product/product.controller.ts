@@ -33,6 +33,21 @@ export class ProductController {
     return this.productService.getLowStockProducts(threshold);
   }
 
+    //Product reorder recommendation
+  @Get('reorder-recommendations')
+  @Roles('admin')
+  getReorderRecommendations(
+    @Query('days') days: string = '7',
+    @Query('stockThreshold') stockThreshold: string = '10',
+    @Query('minSales') minSales: string = '2', //minimun orders
+  ) {
+    return this.productService.getReorderRecommendations(
+      parseInt(days),
+      parseInt(stockThreshold),
+      parseInt(minSales),
+    )
+  }
+
   @Post()
   @Roles('admin')
   create(@Body() createProductDto: CreateProductDto) {
