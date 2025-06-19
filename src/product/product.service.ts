@@ -32,27 +32,6 @@ export class ProductService {
     }
   }
 
-  findAll() {
-    return this.prisma.product.findMany({
-      include: { category: true },
-    });
-  }
-
-  findOne(id: number) {
-    return this.prisma.product.findUnique({
-      where: { id },
-      include: { category: true },
-    });
-  }
-
-  update(id: number, data: UpdateProductDto) {
-    return this.prisma.product.update({
-       where: { id },
-       data,
-       include: { category: true },
-   });
-  }
-
   //Delete product
   async remove(id: number) {
     const orderItems = await this.prisma.orderItem.findMany({
@@ -94,5 +73,52 @@ export class ProductService {
         quantity: 'asc',
       },
     });
+  }
+
+  //Reorder Recommendations
+  async getReorderRecommendations(days = 7, stockThreshold = 10, minSales = 2) {
+    const result = await this.prisma.$queryRawUnsafe<any[]> (`
+      SELECT
+        p.id,
+        p.name,
+        p.quantity,
+        COUNT(oi."productId") as "timesOrdered"
+      FROM "Product" p
+      JOIN "OrderItem" oi ON p.id = oi."productId"
+      JOIN "Order" o ON o.id = oi."orderId"
+      WHERE p.quantity < ${stockThreshold}
+        AND o."createdAt" >= NOW() - INTERVAL '${days} days'
+      GROUP BY p.id
+      HAVING COUNT(oi."productId") >= ${minSales}
+      ORDER BY "timesOrdered" DESC 
+    `);
+
+    return result.map((r) => ({
+      id: r.id,
+      name: r.name,
+      quantity: r.quantity,
+      timesOrdered: parseInt(r.timesOrdered),
+    }));
+  }
+
+    findAll() {
+    return this.prisma.product.findMany({
+      include: { category: true },
+    });
+  }
+
+  findOne(id: number) {
+    return this.prisma.product.findUnique({
+      where: { id },
+      include: { category: true },
+    });
+  }
+
+  update(id: number, data: UpdateProductDto) {
+    return this.prisma.product.update({
+       where: { id },
+       data,
+       include: { category: true },
+   });
   }
 }
