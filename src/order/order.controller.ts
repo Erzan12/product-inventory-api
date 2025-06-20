@@ -2,7 +2,7 @@
 import { Controller, Post, Body, Request, Patch, Param, Get, Req, ParseIntPipe, Query } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { Roles } from '../auth/roles.decorator';
+import { Roles } from '../auth/public.decorator';
 // import { Role } from '../auth/role.enum';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';

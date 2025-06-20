@@ -39,10 +39,10 @@ export class AuthService {
             throw new UnauthorizedException({ message: RESPONSE_MESSAGES.USER.NOT_FOUND });
         }
 
-        const token = this.jwt.sign({ sub: user.id, role: user.role});
+        const jwt = this.jwt.sign({ sub: user.id, email: user.email});
         return { 
-            message: RESPONSE_MESSAGES.AUTH.LOGIN_SUCCESS,
-            Your_Access_Token: token
+            // message: RESPONSE_MESSAGES.AUTH.LOGIN_SUCCESS,
+            access_token: jwt
         };
     }
 

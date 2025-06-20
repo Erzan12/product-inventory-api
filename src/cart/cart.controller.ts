@@ -1,14 +1,14 @@
 import { Controller, Delete, Post, Get, Patch, Request, Param, Body, Req, BadRequestException } from '@nestjs/common';
 import { CartService } from '../cart/cart.service';
-import { UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/auth/roles.guard';
+import { Authenticated } from 'src/auth/public.decorator';
 
-@UseGuards(AuthGuard('jwt'), RolesGuard)
-@Controller('api/orders/cart')
+// -- disabled jwt for testing in frontend will be comment out later
+@Controller('api/orders')
 export class CartController {
     constructor ( private readonly cartService: CartService) {}
-    @Post()
+
+    @Authenticated()
+    @Post('/cart')
     async addToCart(@Request() req, @Body() body: { productId: number; quantity: number }) {
     const userId = req.user?.userId;
 
@@ -19,9 +19,10 @@ export class CartController {
     return this.cartService.addToCart(userId, body.productId, body.quantity);
     }
 
-    @Get()
+    @Authenticated()
+    @Get('/my-cart')
     viewCart(@Request() req) {
-    const userId = req.user.userIdid;
+    const userId = req.user.userId;
     return this.cartService.viewCart(userId);
     }
 

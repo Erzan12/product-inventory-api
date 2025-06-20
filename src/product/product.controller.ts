@@ -3,20 +3,16 @@ import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { RestockProductDto } from './dto/restock-product.dto';
-import { Roles } from '../auth/roles.decorator';
+import { Authenticated, Roles } from '../auth/public.decorator';
 // import { Role } from '../auth/role.enum';
-import { UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/auth/roles.guard';
 
-
-// @UseGuards(RolesGuard)
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+// -- disabled jwt for testing in frontend will be comment out later
 @Controller('api/products')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
 //Admin restock product
+  @Authenticated()
   @Patch(':id/restock')
   @Roles('admin')
   restock(
@@ -27,6 +23,7 @@ export class ProductController {
   }
 
   //Admin low stock alert
+  @Authenticated()
   @Get('low-stock')
   @Roles('admin')
   getLowStockProducts(@Query('threshold') threshold = 5) {
@@ -34,6 +31,7 @@ export class ProductController {
   }
 
     //Product reorder recommendation
+  @Authenticated()
   @Get('reorder-recommendations')
   @Roles('admin')
   getReorderRecommendations(
@@ -47,7 +45,7 @@ export class ProductController {
       parseInt(minSales),
     )
   }
-
+  @Authenticated() 
   @Post()
   @Roles('admin')
   create(@Body() createProductDto: CreateProductDto) {
@@ -64,12 +62,14 @@ export class ProductController {
     return this.productService.findOne(+id);
   }
 
+  @Authenticated() 
   @Patch(':id')
   @Roles('admin')
   update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
     return this.productService.update(+id, updateProductDto);
   }
 
+  @Authenticated() 
   @Delete(':id')
   @Roles('admin')
   remove(@Param('id') id: string) {
